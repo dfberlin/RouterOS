@@ -1,5 +1,33 @@
+# Usage:
+# $vlanInfo ether1
+
+:global sortInt do={
+    :local tmp
+    :local i
+    :local aaa $1
+    :local n [:len $aaa]
+    :local swapped yes
+    :while ($swapped and ($n >= 2)) do={
+        :set swapped no
+        :for i from=0 to=($n - 2) do={
+            :if ($aaa->$i > $aaa->($i+1)) do={
+                :set tmp ($aaa->$i)
+                :set ($aaa->$i) ($aaa->($i+1))
+                :set ($aaa->($i+1)) $tmp
+                :set swapped yes
+            }
+#        :put ($n . ": " . $i . ": " . [:tostr $aaa])
+        }
+# After each iteration one more element has found its place
+# at the end of the array. 
+        :set n ($n - 1)
+    }
+    return $aaa
+}
+
 global vlanInfo do={
 # Expects the default-name of an interface as argument in $1.
+    :global sortInt
     :local element
     :local arrayVIDs
     :local arrayTagged
@@ -38,16 +66,16 @@ global vlanInfo do={
     :set currentBridge [/interface/bridge/port/get value-name=bridge number=$element]
 #    :set currentIngressFiltering [/interface/bridge/port/get value-name=ingress-filtering number=$element]
     :put "----------------------------------------"
-    :put ("bride:             " . $currentBridge)
+    :put ("bridge:            " . $currentBridge)
     :put ("port:              " . $currentInterfaceName)
     :put ("pvid:              " . $currentPVID)
     :put ("frame-types:       " . $currentFrameTypes)
 #    :put ("ingress-filtering: " . $currentIngressFiltering)
     :if ([:len $memberUntagged] > 0) do={
-        :put ("untagged:          " . [:tostr $memberUntagged])
+        :put ("untagged:          " . [:tostr [$sortInt $memberUntagged]])
     }
     :if ([:len $memberTagged] > 0) do={
-        :put ("tagged:            " . [:tostr $memberTagged])
+        :put ("tagged:            " . [:tostr [$sortInt $memberTagged]])
     }
     :put "----------------------------------------"
 }
